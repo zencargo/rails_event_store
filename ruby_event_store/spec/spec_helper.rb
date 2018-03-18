@@ -8,9 +8,9 @@ ProductAdded = Class.new(RubyEventStore::Event)
 
 RSpec.configure do |config|
   config.around(:each) do |example|
-    Timeout.timeout(5, &example)
+    Timeout.timeout(1, &example)
   end
-end
+end if ENV['MUTATING'] == 'true'
 
 
 module Subscribers

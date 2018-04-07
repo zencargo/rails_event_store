@@ -11,3 +11,4 @@ if v = ENV['RAILS_VERSION']
   gem 'rails', v
 end
 gem 'mutant', github: 'paneq/mutant', branch: 'loop_wnohang'
+#gem 'mutant', path: "/Users/rupert/develop/mutant"

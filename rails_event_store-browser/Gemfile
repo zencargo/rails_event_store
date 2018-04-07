@@ -10,4 +10,4 @@ gem 'bounded_context',                 path: '../bounded_context'
 if v = ENV['RAILS_VERSION']
   gem 'rails', v
 end
-gem 'mutant', github: 'paneq/mutant'
+gem 'mutant', github: 'paneq/mutant', branch: 'loop_wnohang'

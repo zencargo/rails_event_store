@@ -16,7 +16,7 @@ jobs:
 
   rails_event_store_active_record:
     docker:
-      - image: circleci/ruby:2.4.4-node-browsers
+      - image: circleci/ruby:2.6.0-preview1-node-browsers
     steps:
       - checkout
       - run: cd rails_event_store_active_record && make install mutate

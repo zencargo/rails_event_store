@@ -95,7 +95,7 @@ jobs:
           command: make install
           environment:
             ARCHFLAGS: "-arch x86_64"
-            BUNDLE_PATH: vendor/bundle
+            BUNDLE_PATH: ~/res/vendor/bundle
       - save_cache:
           paths:
             - rails_event_store_active_record/vendor/bundle
@@ -105,7 +105,7 @@ jobs:
           working_directory: rails_event_store_active_record
           command: make mutate
           environment:
-            BUNDLE_PATH: vendor/bundle
+            BUNDLE_PATH: ~/res/vendor/bundle
 
 workflows:
   version: 2

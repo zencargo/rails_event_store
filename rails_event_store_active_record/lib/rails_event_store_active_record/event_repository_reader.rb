@@ -7,7 +7,7 @@ module RailsEventStoreActiveRecord
 
     def last_stream_event(stream)
       record = EventInStream.where(stream: stream.name).order('position DESC, id DESC').first
-      record && build_event_instance(record)
+      record && build_event_instance(record.event)
     end
 
     def read_event(event_id)
@@ -23,26 +23,39 @@ module RailsEventStoreActiveRecord
     end
 
     def read(spec)
-      raise RubyEventStore::ReservedInternalName if spec.stream_name.eql?(EventRepository::SERIALIZED_GLOBAL_STREAM_NAME)
-
-      stream = EventInStream.preload(:event).where(stream: normalize_stream_name(spec))
-      stream = stream.order(position: order(spec.direction)) unless spec.global_stream?
-      stream = stream.limit(spec.count) if spec.limit?
-      stream = stream.where(start_condition(spec)) unless spec.head?
-      stream = stream.order(id: order(spec.direction))
-
-      stream.map(&method(:build_event_instance)).each
+      if spec.global_stream?
+        stream = Event.order(position: order(spec.direction))
+        stream = stream.limit(spec.count) if spec.limit?
+        stream = stream.where(start_condition_in_global_stream(spec)) unless spec.head?
+        stream.map { |r| build_event_instance(r) }.each
+      else
+        stream =
+          EventInStream
+            .preload(:event)
+            .where(stream: spec.stream_name)
+            .order(position: order(spec.direction), id: order(spec.direction))
+        stream = stream.limit(spec.count) if spec.limit?
+        stream = stream.where(start_condition(spec)) unless spec.head?
+        stream.map { |r| build_event_instance(r.event) }.each
+      end
     end
 
     private
 
-    def normalize_stream_name(specification)
-      specification.global_stream? ? EventRepository::SERIALIZED_GLOBAL_STREAM_NAME : specification.stream_name
+    def start_condition_in_global_stream(specification)
+      event_record =
+        Event.find_by!(id: specification.start)
+      case specification.direction
+      when :forward
+        ['position > ?', event_record.position]
+      else
+        ['position < ?', event_record.position]
+      end
     end
 
     def start_condition(specification)
       event_record =
-        EventInStream.find_by!(event_id: specification.start, stream: normalize_stream_name(specification))
+        EventInStream.find_by!(event_id: specification.start, stream: specification.stream_name)
       case specification.direction
       when :forward
         ['id > ?', event_record]
@@ -57,10 +70,10 @@ module RailsEventStoreActiveRecord
 
     def build_event_instance(record)
       RubyEventStore::SerializedRecord.new(
-        event_id: record.event.id,
-        metadata: record.event.metadata,
-        data: record.event.data,
-        event_type: record.event.event_type
+        event_id: record.id,
+        metadata: record.metadata,
+        data: record.data,
+        event_type: record.event_type
       )
     end
   end

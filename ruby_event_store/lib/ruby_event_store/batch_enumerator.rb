@@ -6,7 +6,7 @@ module RubyEventStore
       @reader      = reader
     end
 
-    def each
+    def each_batch
       enum = Enumerator.new do |y|
         (0...total_limit).step(batch_size) do |batch_offset|
           batch_offset = Integer(batch_offset)
